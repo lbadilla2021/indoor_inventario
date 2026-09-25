@@ -1,0 +1,73 @@
+// This layout is intentionally scoped to the standard-cost batch form.
+// Odoo 18 renders the sheet and chatter as siblings inside .o_form_renderer.
+.o_form_view.o_indoor_cost_batch_form {
+    // Odoo switches the root controller to a horizontal layout on XXL screens.
+    // Keep this one form vertical so its renderer can use the whole viewport.
+    &.o_xxl_form_view {
+        flex-flow: column nowrap !important;
+    }
+
+    .o_form_view_container {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100% !important;
+    }
+
+    .o_form_renderer {
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        max-width: none;
+        width: 100%;
+    }
+
+    .o_form_sheet_bg {
+        flex: 0 0 auto !important;
+        max-width: none;
+        width: 100%;
+    }
+
+    // Four summary values on one row on desktop; progressively reduce the
+    // number of pairs so labels and amounts remain readable on small screens.
+    .o_indoor_cost_summary.o_group {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+
+    @include media-breakpoint-down(lg) {
+        .o_indoor_cost_summary.o_group {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    .o-mail-Form-chatter {
+        border-inline-start: 0 !important;
+        border-left: 0 !important;
+        border-top: 1px solid var(--border-color, #dee2e6);
+        flex: 0 0 auto !important;
+        max-width: 100%;
+        width: 100% !important;
+
+        &.o-aside {
+            padding-left: 0;
+            padding-top: map-get($spacers, 3);
+        }
+
+        .o-mail-Chatter {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 100%;
+            width: 100%;
+        }
+    }
+
+    // On narrow screens Odoo already stacks the chatter. Keep compact spacing
+    // while preserving the full-width layout and touch-friendly behavior.
+    @include media-breakpoint-down(md) {
+        .o_indoor_cost_summary.o_group {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .o-mail-Form-chatter {
+            padding-top: map-get($spacers, 2);
+        }
+    }
+}

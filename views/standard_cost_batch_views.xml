@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_standard_cost_batch_list" model="ir.ui.view">
+        <field name="name">indoor.standard.cost.batch.list</field>
+        <field name="model">indoor.standard.cost.batch</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'applied'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="closing_date"/>
+                <field name="state" widget="badge"/>
+                <field name="product_count"/>
+                <field name="total_value_before" sum="Total"/>
+                <field name="total_value_after" sum="Total"/>
+                <field name="total_revaluation" sum="Total"/>
+                <field name="calculated_by" optional="hide"/>
+                <field name="approved_by" optional="show"/>
+                <field name="applied_by" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_standard_cost_batch_form" model="ir.ui.view">
+        <field name="name">indoor.standard.cost.batch.form</field>
+        <field name="model">indoor.standard.cost.batch</field>
+        <field name="arch" type="xml">
+            <form string="Actualización de Costos Estándar" class="o_indoor_cost_batch_form">
+                <header>
+                    <button name="action_calculate" string="Calcular" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_include_eligible_products" string="Incluir productos elegibles" type="object"
+                            confirm="Se marcarán para costo mensual todos los productos almacenables cuya categoría use costo estándar. ¿Continuar?"
+                            invisible="state != 'draft'"/>
+                    <button name="action_calculate" string="Recalcular" type="object" class="btn-secondary"
+                            invisible="state != 'calculated'"/>
+                    <button name="action_approve" string="Aprobar" type="object" class="btn-primary"
+                            groups="indoor_inventario.group_standard_cost_approver"
+                            invisible="state != 'calculated'"/>
+                    <button name="action_apply" string="Aplicar costos" type="object" class="btn-primary"
+                            groups="indoor_inventario.group_standard_cost_approver"
+                            confirm="Se actualizará el costo vigente mediante la revalorización nativa de Odoo. ¿Continuar?"
+                            invisible="state != 'approved'"/>
+                    <button name="action_cancel" string="Cancelar" type="object"
+                            invisible="state in ('applied', 'cancelled')"/>
+                    <button name="action_export_xlsx" string="Exportar Excel" type="object"
+                            icon="fa-file-excel-o" invisible="not line_ids"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,calculated,approved,applied"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="company_id" string="Compañía" readonly="state != 'draft'" groups="base.group_multi_company"/>
+                            <field name="closing_date" string="Fecha de cierre" readonly="state != 'draft'"/>
+                            <field name="calculation_date" string="Fecha de cálculo"/>
+                        </group>
+                        <group>
+                            <field name="calculated_by" string="Calculado por"/>
+                            <field name="approved_by" string="Aprobado por"/>
+                            <field name="applied_by" string="Aplicado por"/>
+                            <field name="purchase_limit" string="Compras consideradas" invisible="state == 'draft'"/>
+                        </group>
+                    </group>
+                    <group string="Resumen" class="o_indoor_cost_summary" col="8" invisible="state == 'draft'">
+                        <field name="currency_id" invisible="1"/>
+                        <field name="product_count" string="Productos"/>
+                        <field name="total_value_before" string="Inventario anterior"/>
+                        <field name="total_value_after" string="Nuevo inventario"/>
+                        <field name="total_revaluation" string="Diferencia inventario"/>
+                    </group>
+                    <notebook>
+                        <page string="Revisión">
+                            <field name="line_ids" readonly="state in ('approved', 'applied', 'cancelled')">
+                                <list editable="bottom"
+                                      decoration-danger="validation_status in ('negative_stock', 'invalid_method') or warning_level == 'critical'"
+                                      decoration-warning="validation_status == 'stale' or warning_level == 'warning'"
+                                      decoration-muted="validation_status == 'no_purchase'">
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="product_id" string="Producto" readonly="1"/>
+                                    <field name="product_category_id" string="Categoría" optional="hide" readonly="1"/>
+                                    <field name="stock_qty" string="Cantidad stock" readonly="1"/>
+                                    <field name="old_standard_price" string="PPM anterior" readonly="1"/>
+                                    <field name="purchase_1_qty" string="Cant 1" readonly="1"/>
+                                    <field name="purchase_1_price" string="Precio 1" readonly="1"/>
+                                    <field name="purchase_2_qty" string="Cant 2" readonly="1" optional="show"/>
+                                    <field name="purchase_2_price" string="Precio 2" readonly="1" optional="show"/>
+                                    <field name="purchase_3_qty" string="Cant 3" readonly="1" optional="show"/>
+                                    <field name="purchase_3_price" string="Precio 3" readonly="1" optional="show"/>
+                                    <field name="calculated_standard_price" string="PPM" readonly="1"/>
+                                    <field name="approved_standard_price" string="PPM Aprobado"/>
+                                    <field name="absolute_difference" string="Diferencia $" readonly="1"/>
+                                    <field name="percentage_difference" string="Diferencia %" readonly="1" widget="percentage"/>
+                                    <field name="stock_value_after" string="Nuevo Inventario" readonly="1"/>
+                                    <field name="revaluation_difference" string="Diferencia Inventario" readonly="1"/>
+                                    <field name="validation_status" string="Estado" readonly="1" widget="badge"/>
+                                    <field name="warning" string="Alerta" readonly="1" optional="show"/>
+                                </list>
+                                <form string="Detalle de costo estándar">
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="product_id" readonly="1"/>
+                                                <field name="product_category_id" readonly="1"/>
+                                                <field name="uom_id" readonly="1"/>
+                                                <field name="stock_qty" readonly="1"/>
+                                                <field name="old_standard_price" readonly="1"/>
+                                            </group>
+                                            <group>
+                                                <field name="calculated_standard_price" readonly="1"/>
+                                                <field name="approved_standard_price" readonly="batch_id.state != 'calculated'"/>
+                                                <field name="absolute_difference" readonly="1"/>
+                                                <field name="percentage_difference" readonly="1" widget="percentage"/>
+                                                <field name="validation_status" readonly="1"/>
+                                                <field name="warning" readonly="1"/>
+                                            </group>
+                                        </group>
+                                        <group string="Compra 1" invisible="not purchase_1_id">
+                                            <field name="purchase_1_id"/><field name="purchase_1_line_id"/>
+                                            <field name="purchase_1_partner_id"/><field name="purchase_1_date"/>
+                                            <field name="purchase_1_qty"/><field name="purchase_1_price"/>
+                                            <field name="purchase_1_receipt_ids" widget="many2many_tags"/>
+                                        </group>
+                                        <group string="Compra 2" invisible="not purchase_2_id">
+                                            <field name="purchase_2_id"/><field name="purchase_2_line_id"/>
+                                            <field name="purchase_2_partner_id"/><field name="purchase_2_date"/>
+                                            <field name="purchase_2_qty"/><field name="purchase_2_price"/>
+                                            <field name="purchase_2_receipt_ids" widget="many2many_tags"/>
+                                        </group>
+                                        <group string="Compra 3" invisible="not purchase_3_id">
+                                            <field name="purchase_3_id"/><field name="purchase_3_line_id"/>
+                                            <field name="purchase_3_partner_id"/><field name="purchase_3_date"/>
+                                            <field name="purchase_3_qty"/><field name="purchase_3_price"/>
+                                            <field name="purchase_3_receipt_ids" widget="many2many_tags"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Notas"><field name="notes" readonly="state == 'applied'"/></page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_standard_cost_batch_search" model="ir.ui.view">
+        <field name="name">indoor.standard.cost.batch.search</field>
+        <field name="model">indoor.standard.cost.batch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="closing_date"/>
+                <field name="company_id"/>
+                <filter name="applied" string="Aplicados" domain="[('state','=','applied')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_company" string="Compañía" context="{'group_by':'company_id'}"/>
+                    <filter name="group_month" string="Mes" context="{'group_by':'closing_date:month'}"/>
+                    <filter name="group_state" string="Estado" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_standard_cost_batch" model="ir.actions.act_window">
+        <field name="name">Actualización de Costos Estándar</field>
+        <field name="res_model">indoor.standard.cost.batch</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_standard_cost_batch_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Cree el primer cierre mensual de costos</p>
+            <p>
+                Pulse Nuevo, indique la fecha de cierre y use Incluir productos elegibles si aún no ha
+                configurado los productos. Después pulse Calcular para ver, por producto, las últimas
+                tres compras efectivamente recibidas.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_standard_cost_line_list" model="ir.ui.view">
+        <field name="name">indoor.standard.cost.line.history.list</field>
+        <field name="model">indoor.standard.cost.line</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0"
+                  decoration-danger="warning_level == 'critical'" decoration-warning="warning_level == 'warning'">
+                <field name="closing_date"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="product_id"/>
+                <field name="product_category_id"/>
+                <field name="stock_qty"/>
+                <field name="old_standard_price"/>
+                <field name="calculated_standard_price"/>
+                <field name="approved_standard_price"/>
+                <field name="absolute_difference"/>
+                <field name="percentage_difference" widget="percentage"/>
+                <field name="stock_value_before"/>
+                <field name="stock_value_after"/>
+                <field name="revaluation_difference"/>
+                <field name="purchase_count"/>
+                <field name="validation_status" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_standard_cost_line_pivot" model="ir.ui.view">
+        <field name="name">indoor.standard.cost.line.history.pivot</field>
+        <field name="model">indoor.standard.cost.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Historial de costos">
+                <field name="closing_date" interval="month" type="row"/>
+                <field name="product_category_id" type="row"/>
+                <field name="product_id" type="row"/>
+                <field name="old_standard_price" type="measure"/>
+                <field name="approved_standard_price" type="measure"/>
+                <field name="absolute_difference" type="measure"/>
+                <field name="percentage_difference" type="measure"/>
+                <field name="stock_value_before" type="measure"/>
+                <field name="stock_value_after" type="measure"/>
+                <field name="revaluation_difference" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_standard_cost_line_history" model="ir.actions.act_window">
+        <field name="name">Historial de costos</field>
+        <field name="res_model">indoor.standard.cost.line</field>
+        <field name="view_mode">list,pivot,form</field>
+        <field name="context">{'search_default_group_month': 1}</field>
+    </record>
+</odoo>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_product_label_custom" model="report.paperformat">
+        <field name="name">Hoja Carta para etiquetas personalizadas Indoor</field>
+        <field name="default" eval="False"/>
+        <field name="format">Letter</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">0</field>
+        <field name="margin_bottom">0</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="disable_shrinking" eval="True"/>
+        <field name="dpi">96</field>
+    </record>
+
+    <record id="action_report_product_label_custom" model="ir.actions.report">
+        <field name="name">Etiqueta de producto personalizada (PDF)</field>
+        <field name="model">product.template</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">indoor_inventario.report_producttemplatelabel_custom</field>
+        <field name="report_file">indoor_inventario.report_producttemplatelabel_custom</field>
+        <field name="paperformat_id" ref="indoor_inventario.paperformat_product_label_custom"/>
+        <field name="print_report_name">'Etiquetas de productos personalizadas'</field>
+        <field name="binding_model_id" eval="False"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

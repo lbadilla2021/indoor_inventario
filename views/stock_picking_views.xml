@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_purchase_details" model="ir.ui.view">
+        <field name="name">stock.picking.form.purchase.details</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="replace">
+                <label for="origin"/>
+                <div class="o_row">
+                    <field name="origin" placeholder="p. ej. P00002"
+                           readonly="state in ['cancel', 'done']" class="oe_inline"/>
+                    <field name="purchase_id" invisible="1"/>
+                    <button name="action_open_purchase_order_modal" type="object"
+                            icon="fa-external-link" class="btn btn-link px-1"
+                            title="Ver documento origen"
+                            invisible="picking_type_code != 'incoming' or not purchase_id"/>
+                </div>
+            </xpath>
+            <xpath expr="//field[@name='move_ids_without_package']/list/field[@name='product_id']" position="after">
+                <field name="purchase_currency_id" column_invisible="True"/>
+                <field name="purchase_price_unit" string="Precio compra" widget="monetary"
+                       readonly="1" optional="show"
+                       column_invisible="parent.picking_type_code != 'incoming'"/>
+                <field name="vendor_invoice_ref" string="Factura" optional="show"
+                       readonly="state in ('done', 'cancel')"
+                       column_invisible="parent.picking_type_code != 'incoming'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_stock_move_operations_purchase_details" model="ir.ui.view">
+        <field name="name">stock.move.operations.form.purchase.details</field>
+        <field name="model">stock.move</field>
+        <field name="inherit_id" ref="stock.view_stock_move_operations"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/group/group[2]" position="inside">
+                <field name="purchase_currency_id" invisible="1"/>
+                <field name="purchase_price_unit" string="Precio compra" widget="monetary"
+                       readonly="1" invisible="picking_code != 'incoming'"/>
+                <field name="vendor_invoice_ref" string="Factura"
+                       readonly="state in ('done', 'cancel')"
+                       invisible="picking_code != 'incoming'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

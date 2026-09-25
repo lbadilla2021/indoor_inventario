@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock.menu_stock_procurement" model="ir.ui.menu">
+        <field name="sequence">5</field>
+    </record>
+
+    <menuitem id="menu_inventory_count"
+              name="Inventariar"
+              parent="stock.menu_stock_root"
+              action="action_inventory_count_line"
+              sequence="110"
+              groups="stock.group_stock_user"/>
+
+    <menuitem id="menu_inventory_count_session"
+              name="Sesiones Inventario"
+              parent="stock.menu_stock_warehouse_mgmt"
+              action="action_inventory_count_session"
+              sequence="4"
+              groups="stock.group_stock_user"/>
+
+    <menuitem id="menu_inventory_count_consolidated"
+              name="Sesiones Inventario"
+              parent="stock.menu_warehouse_report"
+              action="action_inventory_count_consolidated"
+              sequence="210"
+              groups="stock.group_stock_manager"/>
+</odoo>

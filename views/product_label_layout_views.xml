@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_label_layout_form_custom" model="ir.ui.view">
+        <field name="name">product.label.layout.form.custom.indoor</field>
+        <field name="model">product.label.layout</field>
+        <field name="inherit_id" ref="product.product_label_layout_form"/>
+        <field name="arch" type="xml">
+            <field name="print_format" position="after">
+                <field name="custom_label_width"
+                       invisible="print_format != 'custom'"
+                       required="print_format == 'custom'"/>
+                <field name="custom_label_height"
+                       invisible="print_format != 'custom'"
+                       required="print_format == 'custom'"/>
+                <field name="columns" invisible="print_format != 'custom'" readonly="1"/>
+                <field name="rows" invisible="print_format != 'custom'" readonly="1"/>
+            </field>
+        </field>
+    </record>
+</odoo>

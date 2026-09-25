@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_producttemplatelabel_custom">
+        <t t-call="web.html_container">
+            <style>
+                html,
+                body.o_body_html,
+                body.o_body_pdf,
+                #wrapwrap,
+                main {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    max-width: none !important;
+                    height: auto !important;
+                }
+                .indoor_custom_label_sheet {
+                    width: 215.4mm;
+                    height: 278.9mm;
+                    padding: 14.45mm 12.7mm;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    page-break-after: always;
+                }
+            </style>
+            <t t-call="indoor_inventario.report_productlabel_custom"/>
+        </t>
+    </template>
+
+    <template id="report_productlabel_custom">
+        <t t-set="current_data" t-value="False"/>
+        <t t-set="current_quantity" t-value="0"/>
+        <t t-set="product" t-value="False"/>
+        <t t-set="barcode" t-value="False"/>
+        <t t-foreach="range(page_numbers)" t-as="page">
+            <div class="indoor_custom_label_sheet">
+                <table style="border-collapse:collapse;table-layout:auto;">
+                    <t t-foreach="range(rows)" t-as="row">
+                        <tr>
+                            <t t-foreach="range(columns)" t-as="column">
+                                <t t-if="not current_quantity and quantity and not (current_data and current_data[1])">
+                                    <t t-set="current_data" t-value="quantity.popitem()"/>
+                                    <t t-set="product" t-value="current_data[0]"/>
+                                    <t t-set="barcode_and_qty" t-value="current_data[1].pop()"/>
+                                    <t t-set="barcode" t-value="barcode_and_qty[0]"/>
+                                    <t t-set="current_quantity" t-value="barcode_and_qty[1]"/>
+                                </t>
+                                <t t-if="current_quantity">
+                                    <t t-set="make_invisible" t-value="False"/>
+                                    <t t-set="current_quantity" t-value="current_quantity - 1"/>
+                                </t>
+                                <t t-elif="current_data and current_data[1]">
+                                    <t t-set="barcode_and_qty" t-value="current_data[1].pop()"/>
+                                    <t t-set="barcode" t-value="barcode_and_qty[0]"/>
+                                    <t t-set="current_quantity" t-value="barcode_and_qty[1] - 1"/>
+                                </t>
+                                <t t-else="">
+                                    <t t-set="make_invisible" t-value="True"/>
+                                </t>
+
+                                <td t-att-style="'padding:0 %smm %smm 0;vertical-align:top;' % (label_gap if not column_last else 0, label_gap if not row_last else 0)">
+                                    <div t-att-style="'visibility:%s;width:%smm;height:%smm;padding:1.5mm;box-sizing:border-box;overflow:hidden;border:1px solid #000;' % ('hidden' if make_invisible else 'visible', custom_label_width, custom_label_height)">
+                                        <div style="position:relative;width:100%;height:100%;text-align:center;line-height:1.15;overflow:hidden;">
+                                            <div t-attf-style="position:absolute;left:0;right:0;bottom:#{label_text_offset}mm;max-height:#{label_text_zone_height}mm;overflow:hidden;font-size:#{label_name_font_size}pt;font-weight:bold;line-height:1.15;">
+                                                <span t-field="product.name"/>
+                                            </div>
+
+                                            <t t-if="barcode">
+                                                <div t-attf-style="position:absolute;top:#{barcode_top}mm;left:0;width:100%;height:#{barcode_height}mm;text-align:center;line-height:0;overflow:visible;">
+                                                    <div t-out="barcode"
+                                                         style="padding:0;margin:0 auto;"
+                                                         t-options="{'widget': 'barcode', 'quiet': 0, 'humanreadable': 0, 'symbology': 'auto', 'img_style': 'display:block;margin:0 auto;width:%smm;height:%smm' % (barcode_width, barcode_height)}"/>
+                                                </div>
+                                                <div t-attf-style="position:absolute;top:#{label_text_offset}mm;left:0;width:100%;max-height:#{label_text_zone_height}mm;overflow:hidden;font-size:#{barcode_text_font_size}pt;line-height:1.15;">
+                                                    <span t-out="barcode"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </td>
+                            </t>
+                        </tr>
+                    </t>
+                </table>
+            </div>
+        </t>
+    </template>
+</odoo>

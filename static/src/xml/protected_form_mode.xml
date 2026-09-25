@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="indoor_inventario.ProtectedFormView"
+       t-inherit="web.FormView"
+       t-inherit-mode="extension">
+        <xpath expr="(//t[@t-set-slot='control-panel-create-button'])[last()]" position="inside">
+            <button t-if="this.isIndoorProtectedReadonlyForm"
+                    type="button"
+                    class="btn btn-primary o_indoor_form_button_edit ms-2"
+                    data-hotkey="e"
+                    t-on-click.stop="enterIndoorEditMode">
+                <i class="fa fa-pencil me-1"/>Editar
+            </button>
+        </xpath>
+    </t>
+
+    <t t-name="indoor_inventario.ProtectedFormDialogButtons"
+       t-inherit="web.FormView.Buttons"
+       t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o_form_buttons_edit')]" position="before">
+            <div t-if="this.isIndoorProtectedReadonlyForm" class="o_form_buttons_view d-flex gap-1">
+                <button type="button"
+                        class="btn btn-primary o_indoor_form_button_edit"
+                        data-hotkey="e"
+                        t-on-click.stop="enterIndoorEditMode">
+                    <i class="fa fa-pencil me-1"/>Editar
+                </button>
+            </div>
+        </xpath>
+    </t>
+</templates>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <function model="ir.module.module" name="_sync_indoor_inventory_display_name"/>
+    <function model="stock.location" name="_setup_indoor_production_delivery"/>
+</odoo>

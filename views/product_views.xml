@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_template_form_monthly_standard_cost" model="ir.ui.view">
+        <field name="name">product.template.form.monthly.standard.cost</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <widget name="web_ribbon" title="Inmovilizado" bg_color="text-bg-warning"
+                        invisible="not indoor_is_immobilized"/>
+                <field name="indoor_is_immobilized" invisible="1"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_standard_cost_history" type="object" class="oe_stat_button"
+                        icon="fa-history" invisible="not use_monthly_standard_cost"
+                        groups="indoor_inventario.group_standard_cost_analyst">
+                    <field name="standard_cost_history_count" widget="statinfo" string="Historial costos"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='standard_price']" position="attributes">
+                <attribute name="readonly">use_monthly_standard_cost</attribute>
+            </xpath>
+            <xpath expr="//group[@name='group_standard_price']" position="after">
+                <group string="Costo estándar mensual" name="monthly_standard_cost">
+                    <field name="use_monthly_standard_cost"/>
+                    <field name="last_standard_cost_calculation_date" invisible="not use_monthly_standard_cost"/>
+                    <field name="last_standard_cost_application_date" invisible="not use_monthly_standard_cost"/>
+                    <field name="last_calculated_standard_cost" invisible="not use_monthly_standard_cost"/>
+                    <field name="last_approved_standard_cost" invisible="not use_monthly_standard_cost"/>
+                </group>
+                <group string="Control de inmovilización" name="indoor_immobilization">
+                    <field name="indoor_is_immobilized" readonly="1"/>
+                    <field name="indoor_last_consumption_date" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_product_variant_form_monthly_standard_cost" model="ir.ui.view">
+        <field name="name">product.product.form.monthly.standard.cost</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <widget name="web_ribbon" title="Inmovilizado" bg_color="text-bg-warning"
+                        invisible="not indoor_is_immobilized"/>
+                <field name="indoor_is_immobilized" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='standard_price']" position="attributes">
+                <attribute name="readonly">use_monthly_standard_cost</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_standard_cost_history" type="object" class="oe_stat_button"
+                        icon="fa-history" invisible="not use_monthly_standard_cost"
+                        groups="indoor_inventario.group_standard_cost_analyst">
+                    <field name="standard_cost_history_count" widget="statinfo" string="Historial costos"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='standard_price']" position="after">
+                <field name="indoor_is_immobilized" readonly="1"/>
+                <field name="indoor_last_consumption_date" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_template_search_immobilized" model="ir.ui.view">
+        <field name="name">product.template.search.immobilized</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter name="indoor_immobilized" string="Inmovilizados"
+                        domain="[('indoor_is_immobilized', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_monthly_cost_diagnostic_list" model="ir.ui.view">
+        <field name="name">product.product.monthly.cost.diagnostic.list</field>
+        <field name="model">product.product</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" decoration-danger="cost_method != 'standard'">
+                <field name="default_code" optional="show"/>
+                <field name="display_name" string="Producto"/>
+                <field name="categ_id"/>
+                <field name="cost_method"/>
+                <field name="qty_available"/>
+                <field name="standard_price"/>
+                <field name="company_currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_monthly_cost_diagnostic" model="ir.actions.act_window">
+        <field name="name">Diagnóstico de método de costo</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_monthly_cost_diagnostic_list"/>
+        <field name="domain">[('use_monthly_standard_cost','=',True),('cost_method','!=','standard')]</field>
+        <field name="context">{'search_default_filter_to_sell': 0}</field>
+        <field name="help" type="html"><p>Productos marcados para costo mensual cuya categoría aún usa AVCO o FIFO.</p></field>
+    </record>
+</odoo>

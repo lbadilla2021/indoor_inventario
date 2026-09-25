@@ -1,0 +1,33 @@
+.o_indoor_mobile_count_form {
+    .o_indoor_count_header {
+        margin-bottom: 12px;
+    }
+
+    .o_indoor_scan_panel {
+        .o_field_widget[name="barcode"] input,
+        .o_field_widget[name="quantity"] input {
+            min-height: 46px;
+            font-size: 1.15rem;
+        }
+
+        .o_field_widget[name="barcode"] input {
+            font-weight: 600;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .o_indoor_mobile_count_form {
+        .o_group.o_inner_group {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .o_indoor_scan_panel {
+            .o_field_widget[name="barcode"] input,
+            .o_field_widget[name="quantity"] input {
+                min-height: 54px;
+                font-size: 1.25rem;
+            }
+        }
+    }
+}
