@@ -33,6 +33,7 @@
             "indoor_inventario/static/src/js/protected_form_mode.js",
             "indoor_inventario/static/src/xml/protected_form_mode.xml",
             "indoor_inventario/static/src/js/barcode_auto_tab_field.js",
+            "indoor_inventario/static/src/xml/barcode_auto_tab_field.xml",
             "indoor_inventario/static/src/scss/inventory_count.scss",
         ],
     },

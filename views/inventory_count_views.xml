@@ -154,7 +154,7 @@
                         <field name="state" widget="badge" readonly="1"/>
                     </group>
                     <group class="o_indoor_scan_panel">
-                        <field name="barcode" widget="indoor_barcode_auto_tab" placeholder="Escanee o digite el código" autofocus="autofocus"/>
+                        <field name="barcode" widget="indoor_barcode_auto_tab" options="{'camera': True}" placeholder="Escanee, use la cámara o digite el código" autofocus="autofocus"/>
                         <field name="product_id" options="{'no_create_edit': True, 'no_open': True}"/>
                         <field name="quantity"/>
                         <field name="product_uom_id" readonly="1"/>

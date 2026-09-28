@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="indoor_inventario.IndoorBarcodeAutoTabField"
+       t-inherit="web.CharField"
+       t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_field_input_buttons')]" position="inside">
+            <button t-if="hasCameraButton"
+                    type="button"
+                    class="btn btn-link m-0 py-0 px-2 fa fa-camera"
+                    tabindex="-1"
+                    aria-label="Escanear código con cámara"
+                    title="Escanear código con cámara"
+                    data-tooltip="Escanear código con cámara"
+                    t-on-click="onCameraScan"/>
+        </xpath>
+    </t>
+</templates>
