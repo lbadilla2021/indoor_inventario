@@ -13,6 +13,10 @@
         .o_field_widget[name="barcode"] input {
             font-weight: 600;
         }
+
+        .o_field_widget[name="barcode"] .o_field_input_buttons {
+            visibility: visible;
+        }
     }
 }
 
@@ -50,6 +54,18 @@
         }
 
         .o_indoor_scan_panel {
+            .o_field_widget[name="barcode"] {
+                position: relative;
+                padding-top: 2.4rem;
+
+                .o_field_input_buttons {
+                    top: 0;
+                    right: 0;
+                    height: 2rem;
+                    align-items: center;
+                }
+            }
+
             .o_field_widget[name="barcode"] input,
             .o_field_widget[name="quantity"] input {
                 min-height: 54px;

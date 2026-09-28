@@ -25,7 +25,13 @@ export class IndoorCameraQuantityDialog extends Component {
 
     setup() {
         this.quantityInput = useRef("quantity");
-        this.state = useState({ quantity: 1, saving: false, error: "" });
+        this.state = useState({
+            quantity: 1,
+            lotName: "",
+            note: "",
+            saving: false,
+            error: "",
+        });
         onMounted(() => {
             this.quantityInput.el?.focus();
             this.quantityInput.el?.select();
@@ -38,10 +44,15 @@ export class IndoorCameraQuantityDialog extends Component {
             this.state.error = _t("La cantidad debe ser mayor que cero.");
             return;
         }
+        const lotName = this.state.lotName.trim();
+        if (this.props.product.tracking !== "none" && !lotName) {
+            this.state.error = _t("Debe indicar un lote o número de serie.");
+            return;
+        }
         this.state.saving = true;
         this.state.error = "";
         try {
-            if (await this.props.onSave(quantity)) {
+            if (await this.props.onSave(quantity, lotName, this.state.note.trim())) {
                 this.props.close();
             }
         } finally {
@@ -157,6 +168,18 @@ export class IndoorBarcodeAutoTabField extends CharField {
         );
     }
 
+    async findLot(productId, lotName) {
+        return this.orm.searchRead(
+            "stock.lot",
+            [
+                ["product_id", "=", productId],
+                ["name", "=", lotName],
+            ],
+            ["display_name"],
+            { limit: 2 }
+        );
+    }
+
     confirmAndCreateLine(product, barcode, sessionId, locationId) {
         return new Promise((resolve) => {
             let settled = false;
@@ -171,16 +194,41 @@ export class IndoorBarcodeAutoTabField extends CharField {
                 {
                     barcode,
                     product,
-                    onSave: async (quantity) => {
+                    onSave: async (quantity, lotName, note) => {
                         try {
+                            let lotId = false;
+                            if (product.tracking !== "none") {
+                                const lots = await this.findLot(product.id, lotName);
+                                if (lots.length !== 1) {
+                                    const message = lots.length
+                                        ? _t(
+                                              "Existe más de un lote o serie llamado %s para este producto.",
+                                              lotName
+                                          )
+                                        : _t(
+                                              "No existe el lote o serie %s para este producto.",
+                                              lotName
+                                          );
+                                    this.notification.add(message, { type: "warning" });
+                                    return false;
+                                }
+                                lotId = lots[0].id;
+                            }
+                            const values = {
+                                session_id: sessionId,
+                                location_id: locationId,
+                                barcode,
+                                product_id: product.id,
+                                quantity,
+                            };
+                            if (lotId) {
+                                values.lot_id = lotId;
+                            }
+                            if (note) {
+                                values.note = note;
+                            }
                             await this.orm.create("indoor.inventory.count.line", [
-                                {
-                                    session_id: sessionId,
-                                    location_id: locationId,
-                                    barcode,
-                                    product_id: product.id,
-                                    quantity,
-                                },
+                                values,
                             ]);
                             this.notification.add(
                                 _t("Lectura registrada: %s", product.display_name),
@@ -244,19 +292,7 @@ export class IndoorBarcodeAutoTabField extends CharField {
                     this.notification.add(message, { type: "warning" });
                     continue;
                 }
-
                 const product = products[0];
-                if (product.tracking !== "none") {
-                    this.notification.add(
-                        _t(
-                            "%s requiere lote o serie. Regístrelo desde el formulario normal.",
-                            product.display_name
-                        ),
-                        { type: "warning" }
-                    );
-                    break;
-                }
-
                 const continueScanning = await this.confirmAndCreateLine(
                     product,
                     barcode,

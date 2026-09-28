@@ -6,12 +6,14 @@
         <xpath expr="//div[hasclass('o_field_input_buttons')]" position="inside">
             <button t-if="hasCameraButton"
                     type="button"
-                    class="btn btn-link m-0 py-0 px-2 fa fa-camera"
+                    class="btn btn-primary btn-sm o_indoor_camera_launcher"
                     tabindex="-1"
                     aria-label="Iniciar modo cámara continuo"
                     title="Iniciar modo cámara continuo"
                     data-tooltip="Iniciar modo cámara continuo"
-                    t-on-click="onCameraScan"/>
+                    t-on-click.stop="onCameraScan">
+                <i class="fa fa-camera me-1"/>Cámara
+            </button>
         </xpath>
     </t>
 
@@ -53,6 +55,24 @@
                                 Guardar
                             </button>
                         </div>
+                    </div>
+                    <div t-if="props.product.tracking !== 'none'" class="col-12">
+                        <label class="form-label" for="indoor_camera_lot">Lote/Serie</label>
+                        <input id="indoor_camera_lot"
+                               t-model="state.lotName"
+                               type="text"
+                               autocomplete="off"
+                               class="form-control"
+                               placeholder="Escanee o escriba el lote/serie"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="indoor_camera_note">Nota</label>
+                        <input id="indoor_camera_note"
+                               t-model="state.note"
+                               type="text"
+                               autocomplete="off"
+                               class="form-control"
+                               placeholder="Nota opcional"/>
                         <div t-if="state.error" class="text-danger mt-2" t-esc="state.error"/>
                     </div>
                 </div>
