@@ -15,6 +15,7 @@ class InventoryCountSession(models.Model):
         readonly=True,
         tracking=True,
     )
+    description = fields.Char(string="Nombre", tracking=True)
     state = fields.Selection(
         [
             ("draft", "Borrador"),
@@ -68,6 +69,15 @@ class InventoryCountSession(models.Model):
         "res.users", string="Último usuario", compute="_compute_line_count"
     )
     note = fields.Text(string="Nota")
+
+    @api.depends("name", "description")
+    def _compute_display_name(self):
+        for session in self:
+            session.display_name = (
+                f"{session.name} - {session.description}"
+                if session.description
+                else session.name
+            )
 
     @api.model
     def _default_location_id(self):
@@ -328,7 +338,6 @@ class InventoryCountLine(models.Model):
         string="Sesión",
         required=True,
         ondelete="cascade",
-        default=lambda self: self._default_session_id(),
     )
     state = fields.Selection(related="session_id.state", string="Estado", store=True)
     barcode = fields.Char(
@@ -381,20 +390,6 @@ class InventoryCountLine(models.Model):
         string="Fecha lectura", default=fields.Datetime.now, readonly=True
     )
     note = fields.Char(string="Nota")
-
-    @api.model
-    def _default_session_id(self):
-        session = self.env["indoor.inventory.count.session"].search(
-            [
-                ("state", "in", ("draft", "in_progress")),
-                ("responsible_id", "=", self.env.user.id),
-                ("company_id", "=", self.env.company.id),
-            ],
-            limit=1,
-        )
-        if session:
-            return session.id
-        return self.env["indoor.inventory.count.session"].create({}).id
 
     @api.model
     def _default_location_id(self):

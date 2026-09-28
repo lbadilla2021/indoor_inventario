@@ -55,6 +55,28 @@ class TestInventoryCount(TransactionCase):
         self.assertFalse(warning)
         self.assertEqual(line.product_id, self.product)
 
+    def test_inventory_form_does_not_create_or_select_a_session(self):
+        Session = self.env["indoor.inventory.count.session"]
+        session_count = Session.search_count([])
+
+        line = self.env["indoor.inventory.count.line"].new({})
+
+        self.assertFalse(line.session_id)
+        self.assertEqual(Session.search_count([]), session_count)
+
+    def test_session_display_name_combines_reference_and_name(self):
+        session = self.env["indoor.inventory.count.session"].create(
+            {
+                "location_id": self.warehouse.lot_stock_id.id,
+                "description": "Bodega principal",
+            }
+        )
+
+        self.assertEqual(
+            session.display_name,
+            f"{session.name} - Bodega principal",
+        )
+
     def test_menu_positions_and_actions_are_indoor_owned(self):
         inventory_menu = self.env.ref("indoor_inventario.menu_inventory_count")
         session_menu = self.env.ref(
