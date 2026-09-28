@@ -2,14 +2,65 @@
 
 import { registry } from "@web/core/registry";
 import { browser } from "@web/core/browser/browser";
-import * as BarcodeScanner from "@web/core/barcode/barcode_dialog";
+import { BarcodeDialog } from "@web/core/barcode/barcode_dialog";
 import { isBarcodeScannerSupported } from "@web/core/barcode/barcode_video_scanner";
+import { Dialog } from "@web/core/dialog/dialog";
 import { _t } from "@web/core/l10n/translation";
-import { useService } from "@web/core/utils/hooks";
+import { useOwnedDialogs, useService } from "@web/core/utils/hooks";
 import { CharField, charField } from "@web/views/fields/char/char_field";
-import { useEffect } from "@odoo/owl";
+import { Component, onMounted, useEffect, useRef, useState } from "@odoo/owl";
 
 const AUTO_COMMIT_DELAY = 450;
+
+export class IndoorCameraQuantityDialog extends Component {
+    static template = "indoor_inventario.IndoorCameraQuantityDialog";
+    static components = { Dialog };
+    static props = {
+        close: Function,
+        barcode: String,
+        product: Object,
+        onSave: Function,
+        onCancel: Function,
+    };
+
+    setup() {
+        this.quantityInput = useRef("quantity");
+        this.state = useState({ quantity: 1, saving: false, error: "" });
+        onMounted(() => {
+            this.quantityInput.el?.focus();
+            this.quantityInput.el?.select();
+        });
+    }
+
+    async save() {
+        const quantity = Number(this.state.quantity);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            this.state.error = _t("La cantidad debe ser mayor que cero.");
+            return;
+        }
+        this.state.saving = true;
+        this.state.error = "";
+        try {
+            if (await this.props.onSave(quantity)) {
+                this.props.close();
+            }
+        } finally {
+            this.state.saving = false;
+        }
+    }
+
+    cancel() {
+        this.props.onCancel();
+        this.props.close();
+    }
+
+    onQuantityKeydown(ev) {
+        if (ev.key === "Enter") {
+            ev.preventDefault();
+            this.save();
+        }
+    }
+}
 
 export class IndoorBarcodeAutoTabField extends CharField {
     static template = "indoor_inventario.IndoorBarcodeAutoTabField";
@@ -21,7 +72,10 @@ export class IndoorBarcodeAutoTabField extends CharField {
     setup() {
         super.setup();
         this.notification = useService("notification");
+        this.orm = useService("orm");
+        this.addDialog = useOwnedDialogs();
         this.autoCommitTimer = null;
+        this.cameraModeActive = false;
 
         useEffect(
             (inputEl) => {
@@ -65,27 +119,157 @@ export class IndoorBarcodeAutoTabField extends CharField {
         );
     }
 
+    getMany2OneId(fieldName) {
+        return this.props.record.data[fieldName]?.[0] || false;
+    }
+
+    scanWithCamera() {
+        return new Promise((resolve) => {
+            let settled = false;
+            const finish = (barcode) => {
+                if (!settled) {
+                    settled = true;
+                    resolve(barcode || false);
+                }
+            };
+            this.addDialog(
+                BarcodeDialog,
+                {
+                    facingMode: "environment",
+                    onResult: (barcode) => finish(this.parse(barcode || "")),
+                    onError: () => finish(false),
+                },
+                {
+                    // BarcodeDialog closes before invoking onResult. Defer the
+                    // cancellation result so a successful scan wins the race.
+                    onClose: () => window.setTimeout(() => finish(false), 0),
+                }
+            );
+        });
+    }
+
+    async findProduct(barcode) {
+        return this.orm.searchRead(
+            "product.product",
+            [["barcode", "=", barcode]],
+            ["display_name", "uom_id", "tracking"],
+            { limit: 2 }
+        );
+    }
+
+    confirmAndCreateLine(product, barcode, sessionId, locationId) {
+        return new Promise((resolve) => {
+            let settled = false;
+            const finish = (continueScanning) => {
+                if (!settled) {
+                    settled = true;
+                    resolve(continueScanning);
+                }
+            };
+            this.addDialog(
+                IndoorCameraQuantityDialog,
+                {
+                    barcode,
+                    product,
+                    onSave: async (quantity) => {
+                        try {
+                            await this.orm.create("indoor.inventory.count.line", [
+                                {
+                                    session_id: sessionId,
+                                    location_id: locationId,
+                                    barcode,
+                                    product_id: product.id,
+                                    quantity,
+                                },
+                            ]);
+                            this.notification.add(
+                                _t("Lectura registrada: %s", product.display_name),
+                                { type: "success" }
+                            );
+                            finish(true);
+                            return true;
+                        } catch (error) {
+                            const message =
+                                error?.data?.message ||
+                                error?.message ||
+                                _t("No fue posible registrar la lectura.");
+                            this.notification.add(message, { type: "danger" });
+                            return false;
+                        }
+                    },
+                    onCancel: () => finish(false),
+                },
+                { onClose: () => finish(false) }
+            );
+        });
+    }
+
     async onCameraScan() {
-        let barcode;
-        try {
-            barcode = await BarcodeScanner.scanBarcode(this.env);
-        } catch {
+        if (this.cameraModeActive) {
             return;
         }
-        barcode = this.parse(barcode || "");
-        if (!barcode) {
-            this.notification.add(_t("No se detectó ningún código. Inténtelo nuevamente."), {
+        const sessionId = this.getMany2OneId("session_id");
+        const locationId = this.getMany2OneId("location_id");
+        if (!sessionId || !locationId) {
+            this.notification.add(
+                _t("Seleccione una sesión y una ubicación antes de iniciar la cámara."),
+                { type: "warning" }
+            );
+            return;
+        }
+        if (!["draft", "in_progress"].includes(this.props.record.data.state)) {
+            this.notification.add(_t("La sesión debe estar abierta para registrar lecturas."), {
                 type: "warning",
             });
             return;
         }
 
+        this.cameraModeActive = true;
         window.clearTimeout(this.autoCommitTimer);
-        await this.props.record.update({ [this.props.name]: barcode });
-        if ("vibrate" in browser.navigator) {
-            browser.navigator.vibrate(100);
+        try {
+            while (this.cameraModeActive) {
+                const barcode = await this.scanWithCamera();
+                if (!barcode) {
+                    break;
+                }
+                if ("vibrate" in browser.navigator) {
+                    browser.navigator.vibrate(100);
+                }
+
+                const products = await this.findProduct(barcode);
+                if (products.length !== 1) {
+                    const message = products.length
+                        ? _t("Existe más de un producto con el código %s.", barcode)
+                        : _t("No se encontró un producto con el código %s.", barcode);
+                    this.notification.add(message, { type: "warning" });
+                    continue;
+                }
+
+                const product = products[0];
+                if (product.tracking !== "none") {
+                    this.notification.add(
+                        _t(
+                            "%s requiere lote o serie. Regístrelo desde el formulario normal.",
+                            product.display_name
+                        ),
+                        { type: "warning" }
+                    );
+                    break;
+                }
+
+                const continueScanning = await this.confirmAndCreateLine(
+                    product,
+                    barcode,
+                    sessionId,
+                    locationId
+                );
+                if (!continueScanning) {
+                    break;
+                }
+            }
+        } finally {
+            this.cameraModeActive = false;
         }
-        this.focusQuantityField();
     }
 
     async commitAndFocusNext() {

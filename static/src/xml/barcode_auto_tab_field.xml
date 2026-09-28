@@ -8,10 +8,57 @@
                     type="button"
                     class="btn btn-link m-0 py-0 px-2 fa fa-camera"
                     tabindex="-1"
-                    aria-label="Escanear código con cámara"
-                    title="Escanear código con cámara"
-                    data-tooltip="Escanear código con cámara"
+                    aria-label="Iniciar modo cámara continuo"
+                    title="Iniciar modo cámara continuo"
+                    data-tooltip="Iniciar modo cámara continuo"
                     t-on-click="onCameraScan"/>
         </xpath>
+    </t>
+
+    <t t-name="indoor_inventario.IndoorCameraQuantityDialog">
+        <Dialog title.translate="Registrar lectura" size="'sm'">
+            <div class="o_indoor_camera_confirmation">
+                <div class="text-muted mb-1">Producto</div>
+                <h4 class="mb-3" t-esc="props.product.display_name"/>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Código</label>
+                        <div class="form-control-plaintext fw-semibold" t-esc="props.barcode"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="indoor_camera_quantity">Cantidad</label>
+                        <div class="input-group">
+                            <input id="indoor_camera_quantity"
+                                   t-ref="quantity"
+                                   t-model.number="state.quantity"
+                                   t-on-keydown="onQuantityKeydown"
+                                   type="number"
+                                   min="0"
+                                   step="any"
+                                   class="form-control form-control-lg"/>
+                            <span t-if="props.product.uom_id"
+                                  class="input-group-text"
+                                  t-esc="props.product.uom_id[1]"/>
+                        </div>
+                        <div t-if="state.error" class="text-danger mt-2" t-esc="state.error"/>
+                    </div>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        t-att-disabled="state.saving"
+                        t-on-click="cancel">
+                    Cancelar
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        t-att-disabled="state.saving"
+                        t-on-click="save">
+                    <i t-if="state.saving" class="fa fa-spinner fa-spin me-1"/>
+                    Guardar
+                </button>
+            </t>
+        </Dialog>
     </t>
 </templates>

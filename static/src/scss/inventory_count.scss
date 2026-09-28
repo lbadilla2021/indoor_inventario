@@ -16,6 +16,14 @@
     }
 }
 
+.o_indoor_camera_confirmation {
+    .form-control-lg {
+        min-height: 54px;
+        font-size: 1.4rem;
+        font-weight: 600;
+    }
+}
+
 @media (max-width: 767px) {
     .o_indoor_mobile_count_form {
         .o_group.o_inner_group {
