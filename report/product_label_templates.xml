@@ -69,7 +69,7 @@
                                                 <div t-attf-style="position:absolute;top:#{barcode_top}mm;left:0;width:100%;height:#{barcode_height}mm;text-align:center;line-height:0;overflow:visible;">
                                                     <div t-out="barcode"
                                                          style="padding:0;margin:0 auto;"
-                                                         t-options="{'widget': 'barcode', 'quiet': 0, 'humanreadable': 0, 'symbology': 'auto', 'img_style': 'display:block;margin:0 auto;width:%smm;height:%smm' % (barcode_width, barcode_height)}"/>
+                                                         t-options="{'widget': 'barcode', 'width': barcode_width_px, 'height': barcode_height_px, 'quiet': 1, 'humanreadable': 0, 'symbology': 'auto', 'img_style': 'display:block;margin:0 auto;width:%smm;height:%smm' % (barcode_width, barcode_height)}"/>
                                                 </div>
                                                 <div t-attf-style="position:absolute;top:#{label_text_offset}mm;left:0;width:100%;max-height:#{label_text_zone_height}mm;overflow:hidden;font-size:#{barcode_text_font_size}pt;line-height:1.15;">
                                                     <span t-out="barcode"/>

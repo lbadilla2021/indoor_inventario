@@ -17,6 +17,8 @@ El addon reúne las siguientes capacidades:
 
 ## Índice temático
 
+- [Manual de usuario completo](MANUAL_DE_USUARIO.md)
+
 1. [Arquitectura y estructura del addon](01-arquitectura.md)
 2. [Actualización mensual de costos estándar](02-costos-estandar.md)
 3. [Productos provisionales](03-productos-provisionales.md)

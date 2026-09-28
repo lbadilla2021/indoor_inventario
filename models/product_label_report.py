@@ -48,6 +48,15 @@ class ReportProductTemplateLabelCustom(models.AbstractModel):
     _inherit = "report.product.report_producttemplatelabel_dymo"
     _description = "Reporte de etiquetas de producto personalizadas"
 
+    BARCODE_DPI = 300
+    BARCODE_SIDE_CLEARANCE_MM = 6.0
+    MAX_BARCODE_WIDTH_MM = 85.2
+
+    @classmethod
+    def _mm_to_barcode_pixels(cls, millimeters):
+        """Rasterize barcodes at print resolution, not at the HTML CSS DPI."""
+        return max(round(millimeters * cls.BARCODE_DPI / 25.4), 1)
+
     def _get_report_values(self, docids, data):
         values = super()._get_report_values(docids, data)
         width = data.get("custom_label_width", 50.0)
@@ -55,7 +64,10 @@ class ReportProductTemplateLabelCustom(models.AbstractModel):
         columns = data.get("custom_label_columns", 1)
         rows = data.get("custom_label_rows", 1)
         gap = 5.0
-        barcode_width = max(width - 40.0, 10.0)
+        barcode_width = min(
+            max(width - self.BARCODE_SIDE_CLEARANCE_MM, 10.0),
+            self.MAX_BARCODE_WIDTH_MM,
+        )
         label_inner_height = max(height - 3.0, 1.0)
         barcode_height = min(max(height * 0.25, 3.0), label_inner_height)
         barcode_top = max((label_inner_height - barcode_height) / 2.0, 0.0)
@@ -70,6 +82,8 @@ class ReportProductTemplateLabelCustom(models.AbstractModel):
             label_gap=gap,
             barcode_width=barcode_width,
             barcode_height=barcode_height,
+            barcode_width_px=self._mm_to_barcode_pixels(barcode_width),
+            barcode_height_px=self._mm_to_barcode_pixels(barcode_height),
             barcode_top=barcode_top,
             label_text_offset=barcode_top + barcode_height + label_vertical_gap,
             label_text_zone_height=max(barcode_top - label_vertical_gap, 1.0),
