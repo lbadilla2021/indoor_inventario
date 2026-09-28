@@ -16,7 +16,7 @@
     </t>
 
     <t t-name="indoor_inventario.IndoorCameraQuantityDialog">
-        <Dialog title.translate="Registrar lectura" size="'sm'">
+        <Dialog title.translate="Registrar lectura" size="'sm'" footer="false">
             <div class="o_indoor_camera_confirmation">
                 <div class="text-muted mb-1">Producto</div>
                 <h4 class="mb-3" t-esc="props.product.display_name"/>
@@ -26,8 +26,10 @@
                         <div class="form-control-plaintext fw-semibold" t-esc="props.barcode"/>
                     </div>
                     <div class="col-12">
-                        <label class="form-label" for="indoor_camera_quantity">Cantidad</label>
-                        <div class="input-group">
+                        <label class="form-label" for="indoor_camera_quantity">
+                            Cantidad<t t-if="props.product.uom_id"> (<t t-esc="props.product.uom_id[1]"/>)</t>
+                        </label>
+                        <div class="o_indoor_camera_quantity_row">
                             <input id="indoor_camera_quantity"
                                    t-ref="quantity"
                                    t-model.number="state.quantity"
@@ -35,30 +37,26 @@
                                    type="number"
                                    min="0"
                                    step="any"
+                                   inputmode="decimal"
                                    class="form-control form-control-lg"/>
-                            <span t-if="props.product.uom_id"
-                                  class="input-group-text"
-                                  t-esc="props.product.uom_id[1]"/>
+                            <button type="button"
+                                    class="btn btn-secondary btn-sm o_indoor_camera_action"
+                                    t-att-disabled="state.saving"
+                                    t-on-click="cancel">
+                                Cancelar
+                            </button>
+                            <button type="button"
+                                    class="btn btn-primary btn-sm o_indoor_camera_action"
+                                    t-att-disabled="state.saving"
+                                    t-on-click="save">
+                                <i t-if="state.saving" class="fa fa-spinner fa-spin me-1"/>
+                                Guardar
+                            </button>
                         </div>
                         <div t-if="state.error" class="text-danger mt-2" t-esc="state.error"/>
                     </div>
                 </div>
             </div>
-            <t t-set-slot="footer">
-                <button type="button"
-                        class="btn btn-secondary"
-                        t-att-disabled="state.saving"
-                        t-on-click="cancel">
-                    Cancelar
-                </button>
-                <button type="button"
-                        class="btn btn-primary"
-                        t-att-disabled="state.saving"
-                        t-on-click="save">
-                    <i t-if="state.saving" class="fa fa-spinner fa-spin me-1"/>
-                    Guardar
-                </button>
-            </t>
         </Dialog>
     </t>
 </templates>
